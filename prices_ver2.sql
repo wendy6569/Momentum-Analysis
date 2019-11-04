@@ -256,7 +256,6 @@ ORDER BY 1, 2
 
 -- OUTPUTS
 -- yearly figure 1- general 
-
 SELECT 
 	a1a.financial_year, 
 	a1a.o_price AS OPEN, 
@@ -277,7 +276,6 @@ JOIN a4a
 ;
 
 -- yearly figure 2: yearly % growth by year
-
 SELECT 
 	financial_year,
 	growth_p AS growth_percent,
@@ -287,7 +285,6 @@ FROM b2
 ;
 
 -- 20 years in average
-
 SELECT 
 	ROUND( AVG(growth_p), 2) AS avg_growth_percent,
 	ROUND( AVG(max_p),2) AS avg_high_percent,
@@ -296,7 +293,6 @@ FROM b2
 ;
 
 -- Best months to buy and sell - increase/ decrease by %
-
 SELECT 
 	months,
 	ROUND( 100 * AVG(m_h_per), 4) AS avg_high,
@@ -307,7 +303,6 @@ ORDER BY 1
 ;
 
 -- Best month to buy - in order
-
 SELECT
 	months,
 	ROUND( 100 * AVG(m_l_per), 4) AS avg_low
@@ -317,7 +312,6 @@ ORDER BY 2 asc
 ;
 
 -- Best month to sell - in order
-
 SELECT
 	months,
 	ROUND( 100 * AVG(m_h_per), 4) AS avg_high
@@ -327,7 +321,6 @@ ORDER BY 2 desc
 ;
 
 -- historic dates - 20 years highest and lowest
-
 SELECT
 	a3a.financial_year,
 	a3a.a_high AS highest,
