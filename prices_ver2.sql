@@ -292,7 +292,7 @@ SELECT
 FROM b2
 ;
 
--- Best months to buy and sell - increase/ decrease by %
+-- months highest/ lowest - increase/ decrease by 
 SELECT 
 	months,
 	ROUND( 100 * AVG(m_h_per), 4) AS avg_high,
@@ -302,7 +302,7 @@ GROUP BY 1
 ORDER BY 1
 ;
 
--- Best month to buy - in order
+-- month lowest in order- in order 
 SELECT
 	months,
 	ROUND( 100 * AVG(m_l_per), 4) AS avg_low
@@ -311,7 +311,7 @@ GROUP BY 1
 ORDER BY 2 asc
 ;
 
--- Best month to sell - in order
+-- month highest in order- in order 
 SELECT
 	months,
 	ROUND( 100 * AVG(m_h_per), 4) AS avg_high
