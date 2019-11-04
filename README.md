@@ -1,6 +1,6 @@
 Momentum Analysis 
 
-This is a set of algorithm which provides momentum analysis from 20 years of historic results.
+This is a set of algorithm which provides momentum analysis from 20 years of historic results. Developed in postgreSQL environment.
 
 Final output tables:
 
