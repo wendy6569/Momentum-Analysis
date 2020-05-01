@@ -1,4 +1,4 @@
-Momentum Analysis 
+Sample Model
 
 This is a set of algorithm which provides for analysis from 20 years of historical results. Developed in postgreSQL environment.
 
