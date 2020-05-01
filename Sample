@@ -1,0 +1,193 @@
+-- MASTER table
+CREATE TEMP TABLE master AS
+(
+SELECT CASE
+	WHEN s_date BETWEEN '1999-07-01' AND '2000-06-30' THEN '1999-00'
+	WHEN s_date BETWEEN '2000-07-01' AND '2001-06-30' THEN '2000-01'
+	WHEN s_date BETWEEN '2001-07-01' AND '2002-06-30' THEN '2001-02'
+	WHEN s_date BETWEEN '2002-07-01' AND '2003-06-30' THEN '2002-03'
+	WHEN s_date BETWEEN '2003-07-01' AND '2004-06-30' THEN '2003-04'
+	WHEN s_date BETWEEN '2004-07-01' AND '2005-06-30' THEN '2004-05'
+	WHEN s_date BETWEEN '2005-07-01' AND '2006-06-30' THEN '2005-06'
+	WHEN s_date BETWEEN '2006-07-01' AND '2007-06-30' THEN '2006-07'
+	WHEN s_date BETWEEN '2007-07-01' AND '2008-06-30' THEN '2007-08'
+	WHEN s_date BETWEEN '2008-07-01' AND '2009-06-30' THEN '2008-09'
+	WHEN s_date BETWEEN '2009-07-01' AND '2010-06-30' THEN '2009-10'
+	WHEN s_date BETWEEN '2010-07-01' AND '2011-06-30' THEN '2010-11'
+	WHEN s_date BETWEEN '2011-07-01' AND '2012-06-30' THEN '2011-12'
+	WHEN s_date BETWEEN '2012-07-01' AND '2013-06-30' THEN '2012-13'
+	WHEN s_date BETWEEN '2013-07-01' AND '2014-06-30' THEN '2013-14'
+	WHEN s_date BETWEEN '2014-07-01' AND '2015-06-30' THEN '2014-15'
+	WHEN s_date BETWEEN '2015-07-01' AND '2016-06-30' THEN '2015-16'
+	WHEN s_date BETWEEN '2016-07-01' AND '2017-06-30' THEN '2016-17'
+	WHEN s_date BETWEEN '2017-07-01' AND '2018-06-30' THEN '2017-18'
+	WHEN s_date BETWEEN '2018-07-01' AND '2019-06-30' THEN '2018-19'
+	WHEN s_date BETWEEN '2019-07-01' AND '2020-06-30' THEN '2019-20'
+	END AS financial_year,
+CASE
+	WHEN date_part( 'month', s_date) = 07 THEN 'JUL'
+	WHEN date_part( 'month', s_date) = 08 THEN 'AUG'
+	WHEN date_part( 'month', s_date) = 09 THEN 'SEP'
+	WHEN date_part( 'month', s_date) = 10 THEN 'OCT'
+	WHEN date_part( 'month', s_date) = 11 THEN 'NOV'
+	WHEN date_part( 'month', s_date) = 12 THEN 'DEC'
+	WHEN date_part( 'month', s_date) = 01 THEN 'JAN'
+	WHEN date_part( 'month', s_date) = 02 THEN 'FEB'
+	WHEN date_part( 'month', s_date) = 03 THEN 'MAR'
+	WHEN date_part( 'month', s_date) = 04 THEN 'APR'
+	WHEN date_part( 'month', s_date) = 05 THEN 'MAY'
+	WHEN date_part( 'month', s_date) = 06 THEN 'JUN'
+	END AS months,
+*
+FROM bhp 
+);
+
+-- table a1 - Max, min average by f.year
+CREATE TEMP TABLE a1 AS
+(
+SELECT financial_year, 
+	MAX(p_high) AS highest,
+	MIN(p_low) AS lowest,
+	AVG(p_close) AS averaged
+FROM master m
+WHERE financial_year IS NOT NULL
+GROUP BY financial_year
+ORDER BY financial_year
+);
+
+-- table a2- close date by f.year
+CREATE TEMP TABLE a2 AS
+(
+SELECT financial_year,
+	MAX(s_date) AS last_date
+FROM master
+WHERE financial_year IS NOT NULL
+	GROUP BY financial_year
+	ORDER BY financial_year
+);
+
+-- table a3 close amount by f.year
+CREATE TEMP TABLE a3 AS
+(
+SELECT a2.financial_year, 
+	a2.last_date,
+	master.p_close AS yearly_close
+FROM a2
+LEFT JOIN master 
+	ON master.s_date = a2.last_date
+);
+
+-- table previous close price
+CREATE TEMP TABLE prev AS
+(SELECT ROW_NUMBER () OVER ( ORDER BY financial_year) AS rownum,
+	financial_year,
+	yearly_close
+FROM a3
+);
+
+-- table b1 
+CREATE TEMP TABLE b1 AS
+(	
+SELECT p1.rownum,
+	p2.rownum As rownum2,
+	p1.financial_year,
+	p1.yearly_close,
+	p2.yearly_close AS prev_close
+FROM prev p1
+JOIN prev p2
+	ON p1.rownum = p2.rownum +1
+);
+
+-- table c1
+CREATE TEMP TABLE c1 AS
+(
+SELECT a1.financial_year,
+	(a3.yearly_close - b1.prev_close)/b1.prev_close AS growth,
+	(a1.highest - b1.prev_close)/b1.prev_close AS max_growth,
+	(a1.lowest - b1.prev_close)/b1.prev_close AS min_growth,
+	(a1.averaged - b1.prev_close)/b1.prev_close AS tot_averaged
+FROM a1
+JOIN a3
+	ON a1.financial_year = a3.financial_year
+JOIN b1
+	ON b1.financial_year = a1.financial_Year
+);
+
+-- For table 5
+-- temp table d1
+CREATE TEMP TABLE d1 AS
+(
+SELECT financial_year, 
+	months,
+	MAX(s_date) AS date_months
+FROM master
+GROUP BY 1,2
+ORDER BY 1
+);
+
+-- temp table d2 - add close amount and rownumber
+CREATE TEMP TABLE d2 AS
+(
+SELECT ROW_NUMBER()OVER(ORDER BY d1.financial_year) AS rownumber,
+	d1.financial_year,
+	d1.months,
+	d1.date_months,
+	m.p_close
+FROM d1
+JOIN master m
+	ON d1.date_months = m.s_date
+WHERE d1.financial_year IS NOT NULL
+);
+
+-- temp table d3
+CREATE TEMP TABLE d3 AS
+(
+SELECT t1.months,
+	t1.p_close,
+	t2.p_close AS Prev_close
+FROM d2 t1
+JOIN d2 t2
+	ON t1.rownumber = t2.rownumber +1
+);
+
+-- temp table d4
+CREATE TEMP TABLE d4 AS
+(
+SELECT ta1.months, 
+	AVG(ta1.new_figure)  AS month_amt
+FROM (
+	SELECT months, 
+	(p_close - prev_close)/ prev_close AS new_figure 
+	FROM d3) ta1
+GROUP BY 1
+);
+
+-- FINAL OUTPUTS 
+
+-- TABLE 01
+SELECT s_date, adj_close FROM bhp;
+
+-- TABLE 02 
+SELECT a1.financial_year,
+	a3.yearly_close,
+	a1.highest,
+	a1.lowest,
+	a1.averaged
+FROM a1
+JOIN a3
+ON a1.financial_year = a3.financial_year;
+
+-- TABLE 03
+SELECT * FROM c1;
+
+-- TABLE 04
+SELECT 
+	SUM(growth)/ COUNT(growth) AS avg_growth,
+	SUM(max_growth)/ COUNT(growth) AS avg_max,
+	SUM(min_growth)/ COUNT(growth) AS avg_min,
+	SUM(tot_averaged)/ COUNT(growth) AS avg_averaged
+FROM c1;
+
+-- TABLE 05
+SELECT * FROM d4;
+
