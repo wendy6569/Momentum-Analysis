@@ -165,7 +165,7 @@ GROUP BY 1
 -- FINAL OUTPUTS 
 
 -- TABLE 01
-SELECT s_date, adj_close FROM bhp;
+SELECT s_date, adj_close FROM sample_table;
 
 -- TABLE 02 
 SELECT a1.financial_year,
