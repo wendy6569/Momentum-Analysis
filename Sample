@@ -39,7 +39,7 @@ CASE
 	WHEN date_part( 'month', s_date) = 06 THEN 'JUN'
 	END AS months,
 *
-FROM bhp 
+FROM sample_table 
 );
 
 -- table a1 - Max, min average by f.year
